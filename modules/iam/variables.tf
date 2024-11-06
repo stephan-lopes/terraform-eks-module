@@ -22,6 +22,7 @@ variable "roles" {
   type = list(object({
     name                 = optional(string)
     description          = optional(string)
+    cluster_role         = optional(bool, false)
     max_session_duration = optional(number)
     path                 = optional(string)
     policy_arns          = optional(list(string), [])

@@ -30,22 +30,22 @@ variable "template" {
       name        = string
       description = string
       ingress_rules = optional(list(object({
-        description     = optional(string)
-        from_port       = number
-        to_port         = number
-        protocol        = string
-        security_groups = optional(set(string), [])
-        cidr_blocks     = optional(list(string), [])
-        self            = optional(bool, false)
+        description           = optional(string)
+        from_port             = number
+        to_port               = number
+        protocol              = string
+        security_groups_names = optional(set(string), [])
+        cidr_blocks           = optional(list(string), [])
+        self                  = optional(bool, false)
       })))
       egress_rules = optional(list(object({
-        description     = optional(string)
-        from_port       = number
-        to_port         = number
-        protocol        = string
-        security_groups = optional(set(string), [])
-        cidr_blocks     = optional(list(string), [])
-        self            = optional(bool, false)
+        description           = optional(string)
+        from_port             = number
+        to_port               = number
+        protocol              = string
+        security_groups_names = optional(set(string), [])
+        cidr_blocks           = optional(list(string), [])
+        self                  = optional(bool, false)
       })))
     })), [])
 

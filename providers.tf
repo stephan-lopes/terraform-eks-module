@@ -20,5 +20,5 @@ terraform {
 
 provider "aws" {
   region  = "us-east-1"
-  profile = "guia-anonima"
+  profile = "default"
 }

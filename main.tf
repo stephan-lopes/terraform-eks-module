@@ -1,22 +1,43 @@
 module "iam" {
   source = "./modules/iam"
 
-  roles = [{
-    name        = "CustomEKSClusterRole"
-    policy_arns = ["arn:aws:iam::aws:policy/AmazonEKSServicePolicy", "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"]
-    assume_role_policy = {
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action = "sts:AssumeRole"
-          Effect = "Allow"
-          Principal = {
-            Service = "eks.amazonaws.com"
+  roles = [
+    {
+      name         = "CustomEKSClusterRole"
+      cluster_role = true
+      policy_arns  = ["arn:aws:iam::aws:policy/AmazonEKSServicePolicy", "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"]
+      assume_role_policy = {
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Action = "sts:AssumeRole"
+            Effect = "Allow"
+            Principal = {
+              Service = "eks.amazonaws.com"
+            }
           }
-        }
+        ]
+      }
+    },
+    {
+      name = "CustomNodeInstanceRole"
+      policy_arns = ["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly", "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+        "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
       ]
+      assume_role_policy = {
+        Version = "2012-10-17",
+        Statement = [
+          {
+            Effect = "Allow",
+            Principal = {
+              Service = "ec2.amazonaws.com"
+            },
+            Action = "sts:AssumeRole"
+          }
+        ]
+      }
     }
-  }]
+  ]
 }
 
 module "vpc" {
@@ -161,4 +182,39 @@ module "vpc" {
       ]
     }
   }
+}
+
+
+module "eks" {
+  source = "./modules/eks"
+
+  template = {
+    name     = "eks-study-lab"
+    role_arn = module.iam.cluster_role_arn[0]
+    version  = "1.31"
+    irsa = {
+      enable    = true
+      role_name = "CustomEKSIamRoleforServiceAccounts"
+    }
+    vpc_config = {
+      subnet_ids                 = module.vpc.public_subnets_ids
+      endpoint_public_access     = true
+      cluster_security_group_ids = module.vpc.security_groups_ids[0]
+    }
+
+    node_groups = [{
+      name       = "study-ng-01"
+      role_arn   = module.iam.node_group_role_arn[0]
+      subnet_ids = module.vpc.private_subnets_ids
+      scaling_config = {
+        desired_size = 1
+        max_size     = 1
+        min_size     = 0
+      }
+      update_config = {
+        max_unavailable = 1
+      }
+    }]
+  }
+
 }

@@ -34,7 +34,7 @@ resource "aws_vpc" "this" {
 
 resource "aws_subnet" "this" {
   depends_on = [aws_vpc.this]
-  for_each   = { for key, value in var.template.subnets : key => value }
+  for_each   = { for idx, subnet in var.template.subnets : idx => subnet }
 
   vpc_id            = aws_vpc.this.id
   availability_zone = each.value.availability_zone
@@ -100,13 +100,9 @@ resource "aws_route_table" "this" {
 
 resource "aws_route_table_association" "this" {
   for_each = {
-    for key, value in aws_subnet.this : value.id => {
-      subnet_id = value.id
-      route_table_id = var.template.subnets[key].public_subnet ? aws_route_table.this[
-        local.route_tables_type.public
-        ].id : aws_route_table.this[
-        local.route_tables_type.private
-      ].id
+    for idx, subnet in var.template.subnets : subnet.name => {
+      subnet_id      = aws_subnet.this[idx].id
+      route_table_id = var.template.subnets[idx].public_subnet ? aws_route_table.this[local.route_tables_type.public].id : aws_route_table.this[local.route_tables_type.private].id
     }
   }
 
@@ -115,7 +111,7 @@ resource "aws_route_table_association" "this" {
 }
 
 resource "aws_route" "this" {
-  for_each               = { for key, value in var.template.route_table.routes : key => value }
+  for_each               = { for idx, route in var.template.route_table.routes : idx => route }
   route_table_id         = aws_route_table.this[each.value.route_table_type].id
   destination_cidr_block = each.value.destination
   gateway_id             = each.value.target.internet_gateway ? aws_internet_gateway.this[0].id : null
@@ -125,9 +121,9 @@ resource "aws_route" "this" {
 
 data "aws_security_group" "this" {
   for_each = toset(flatten([
-    for sgs in var.template.security_groups : [
-      for ingress in sgs.ingress_rules : [
-        for sg in ingress.security_groups : sg
+    for security_group in var.template.security_groups : [
+      for ingress_rule in security_group.ingress_rules : [
+        for name in ingress.security_groups_names : name
       ]
     ]
   ]))
@@ -136,7 +132,7 @@ data "aws_security_group" "this" {
 }
 
 resource "aws_security_group" "this" {
-  for_each = { for key, value in var.template.security_groups : key => value }
+  for_each = { for idx, security_group in var.template.security_groups : idx => security_group }
 
   name        = each.value.name
   description = each.value.description
@@ -150,9 +146,9 @@ resource "aws_security_group" "this" {
       to_port     = ingress.value.to_port
       protocol    = ingress.value.protocol
       cidr_blocks = ingress.value.cidr_blocks
-      security_groups = length(ingress.value.security_groups) > 0 ? flatten([
-        for data_sg in data.aws_security_group.this : [
-          for v in ingress.value.security_groups : data_sg.id if data_sg.name == v
+      security_groups = length(ingress.value.security_groups_names) > 0 ? flatten([
+        for security_group in data.aws_security_group.this : [
+          for name in ingress.value.security_groups_names : security_group.id if security_group.name == name
         ]
       ]) : []
       self = ingress.value.self
@@ -167,9 +163,9 @@ resource "aws_security_group" "this" {
       to_port     = egress.value.to_port
       protocol    = egress.value.protocol
       cidr_blocks = egress.value.cidr_blocks
-      security_groups = length(egress.value.security_groups) > 0 ? flatten([
-        for data_sg in data.aws_security_group.this : [
-          for v in egress.value.security_groups : data_sg.id if data_sg.name == v
+      security_groups = length(egress.value.security_groups_names) > 0 ? flatten([
+        for security_group in data.aws_security_group.this : [
+          for name in egress.value.security_groups_names : security_group.id if security_group.name == name
         ]
       ]) : []
       self = egress.value.self
