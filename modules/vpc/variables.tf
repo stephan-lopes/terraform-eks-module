@@ -77,9 +77,9 @@ variable "template" {
 
   validation {
     condition = var.template.security_groups == [] ? true : alltrue([
-      for sg in var.template.security_groups : alltrue([
-        for ingress in sg.ingress_rules : (
-          (length(ingress.security_groups) > 0 ? 1 : 0) +
+      for security_group in var.template.security_groups : alltrue([
+        for ingress in security_group.ingress_rules : (
+          (length(ingress.security_groups_names) > 0 ? 1 : 0) +
           (length(ingress.cidr_blocks) > 0 ? 1 : 0) +
           (ingress.self ? 1 : 0) == 1
         )
@@ -90,9 +90,9 @@ variable "template" {
 
   validation {
     condition = var.template.security_groups == [] ? true : alltrue([
-      for sg in var.template.security_groups : alltrue([
-        for egress in sg.egress_rules : (
-          (length(egress.security_groups) > 0 ? 1 : 0) +
+      for security_group in var.template.security_groups : alltrue([
+        for egress in security_group.egress_rules : (
+          (length(egress.security_groups_names) > 0 ? 1 : 0) +
           (length(egress.cidr_blocks) > 0 ? 1 : 0) +
           (egress.self ? 1 : 0) == 1
         )

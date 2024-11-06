@@ -3,9 +3,9 @@ module "iam" {
 
   roles = [
     {
-      name         = "CustomEKSClusterRole"
-      cluster_role = true
-      policy_arns  = ["arn:aws:iam::aws:policy/AmazonEKSServicePolicy", "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"]
+      assign_as_cluster_role = true
+      role_name              = "CustomEKSClusterRole"
+      attached_policy_arns   = ["arn:aws:iam::aws:policy/AmazonEKSServicePolicy", "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"]
       assume_role_policy = {
         Version = "2012-10-17"
         Statement = [
@@ -20,8 +20,8 @@ module "iam" {
       }
     },
     {
-      name = "CustomNodeInstanceRole"
-      policy_arns = ["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly", "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+      role_name = "CustomNodeInstanceRole"
+      attached_policy_arns = ["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly", "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
         "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
       ]
       assume_role_policy = {

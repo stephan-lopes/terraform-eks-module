@@ -123,7 +123,7 @@ data "aws_security_group" "this" {
   for_each = toset(flatten([
     for security_group in var.template.security_groups : [
       for ingress_rule in security_group.ingress_rules : [
-        for name in ingress.security_groups_names : name
+        for name in ingress_rule.security_groups_names : name
       ]
     ]
   ]))

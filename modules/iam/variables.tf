@@ -20,12 +20,12 @@ variable "policies" {
 
 variable "roles" {
   type = list(object({
-    name                 = optional(string)
-    description          = optional(string)
-    cluster_role         = optional(bool, false)
-    max_session_duration = optional(number)
-    path                 = optional(string)
-    policy_arns          = optional(list(string), [])
+    role_name              = optional(string)
+    role_description       = optional(string)
+    assign_as_cluster_role = optional(bool, false)
+    session_duration_limit = optional(number)
+    role_path              = optional(string)
+    attached_policy_arns   = optional(list(string), [])
     assume_role_policy = object({
       Version   = optional(string, "2012-10-17")
       Statement = list(any)
