@@ -40,6 +40,10 @@ variable "template" {
       type              = string
       user_name         = optional(string)
       kubernetes_groups = optional(list(string))
+      policy_association = optional(list(object({
+        scope      = string
+        policy_arn = string
+      })), [])
     })), [])
   })
 

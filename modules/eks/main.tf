@@ -5,6 +5,17 @@ locals {
     ManagedBy = "terraform"
     Module    = "eks"
   }
+
+  policy_associations = flatten([
+    for idx, access_entry in var.template.access_entries : [
+      for policy in access_entry.policy_association : {
+        key           = "${idx}_${access_entry.principal_arn}_${policy.policy_arn}"
+        principal_arn = access_entry.principal_arn
+        scope         = policy.scope
+        policy_arn    = policy.policy_arn
+      }
+    ]
+  ])
 }
 resource "aws_eks_cluster" "this" {
   name     = var.template.name
@@ -69,3 +80,17 @@ resource "aws_eks_access_entry" "this" {
   user_name         = each.value.user_name
   kubernetes_groups = each.value.kubernetes_groups
 }
+
+resource "aws_eks_access_policy_association" "this" {
+
+  for_each = { for association in local.policy_associations : association.key => association }
+
+  cluster_name  = aws_eks_cluster.this.name
+  policy_arn    = each.value.policy_arn
+  principal_arn = each.value.principal_arn
+
+  access_scope {
+    type = each.value.scope
+  }
+}
+
